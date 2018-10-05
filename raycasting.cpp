@@ -42,12 +42,12 @@ Light light(light_center, light_color);
 
 // Setting snow material
 Vector snow_env_material(1, 1, 1);       // Material's enviroment component factors
-Vector snow_dif_material(0.0, 0.0, 0.0);       // Material's difuse component factors
+Vector snow_dif_material(0.1, 0.1, 0.1);       // Material's difuse component factors
 Vector snow_spe_material(1, 1, 1); // Material's specular component factors
 Material snow_material(snow_env_material, snow_dif_material, snow_spe_material);
 
 Vector snow_env_material2(1, 1, 1);       // Material's enviroment component factors
-Vector snow_dif_material2(0.6, 0.6, 0.6);       // Material's difuse component factors
+Vector snow_dif_material2(0.1, 0.1, 0.1);       // Material's difuse component factors
 Vector snow_spe_material2(1, 1, 1); // Material's specular component factors
 Material snow_material2(snow_env_material2, snow_dif_material2, snow_spe_material2);
 
@@ -59,21 +59,21 @@ Material snow_materialEye(snow_env_materialEye, snow_dif_materialEye, snow_spe_m
 
 // Snowman definition
 //Point eye_center();
-Point eye_center1(250, 250, -430); // Center of body sphere
-Sphere eye1(eye_center1, 100, snow_materialEye);
+Point eye_center1(230, 365, 100); // Center of body sphere
+Sphere eye1(eye_center1, 10, snow_materialEye);
 
-Point eye_center2(250, 250, -470); // Center of body sphere
-Sphere eye2(eye_center2, 100, snow_materialEye);
+Point eye_center2(260, 365, 100); // Center of body sphere
+Sphere eye2(eye_center2, 10, snow_materialEye);
 
-Point body_center(250, 250, -400); // Center of body sphere
+Point body_center(250, 200, 1); // Center of body sphere
 Sphere body(body_center, 100, snow_material2);
 
-Point head_center(250, 270, -400); // Center of head sphere
+Point head_center(250,330, 1); // Center of head sphere
 Sphere head(head_center, 40, snow_material);
 
 
 int n = 4; // Number of objects (spheres) in scenario
-Sphere objects[] = { body, head, eye1, eye2}; // List of these objects
+Sphere objects[] = {body, head,eye1,eye2}; // List of these objects
 
 // Drawing routine.
 void drawScene(void) {
@@ -83,6 +83,9 @@ void drawScene(void) {
 
     glEnable(GL_PROGRAM_POINT_SIZE_EXT);
     glPointSize(1);
+	glLoadIdentity();
+
+	glTranslated(0, 0, -2.5);
     glBegin(GL_POINTS);
         for (float i = 0; i < windowH; i += 1) {
 			x = H / 2 - Dy / 2 - i * Dy;
@@ -90,83 +93,89 @@ void drawScene(void) {
 				y = -W / 2 + Dx / 2 + j * Dx;
                 float d = -10; // Position of window
                 Point Pix(i, j, d); // Pixel point in window
-				float t = numeric_limits<float>::max();
-				
-                for (int k = 0; k < n; k++) {
+				float t_int = numeric_limits<float>::max();
+				float t = 0;
+				Vector V(O, Pix); // Vector from camera to Pixel
+				// Setting the enviroment light;
+				Vector Ienv(0.3921, 0.5843, 0.9294);
+				float deltaRay = -1;
+				int indexSphere = 0;
 
-                    Vector V(O, Pix); // Vector from camera to Pixel
+				for (int k = 0; k < n; k++) {
+					// Checking if the ball is intercepted by ray
+					// This check uses the square equation delta
+					float alpha = V.dot(V);
 
-                    // Checking if the ball is intercepted by ray
-                    // This check uses the square equation delta
-                    float alpha = V.dot(V);
+					Vector CO(objects[k].center.x - O.x, objects[k].center.y - O.y, objects[k].center.z - O.z);
+					float beta = 2 * V.dot(CO);
 
-					Vector OC(O.x - objects[k].center.x, O.y - objects[k].center.y, O.z - objects[k].center.z);
-                    float beta = 2 * V.dot(OC);
+					float gamma = CO.dot(CO) -pow(objects[k].radius, 2);
 
-                    Vector OO(O);
-                    Vector CC(objects[k].center);
-                    float gamma = OO.dot(OO) - 2 * OO.dot(CC) + CC.dot(CC) - 2 * objects[k].radius;
-
-                    // Calculating the delta from 'alpha', 'beta' and 'gamma';
-                    float delta = beta * beta - 4 * alpha * gamma;
-
-                    // Setting the enviroment light;
-                    Vector Ienv(0.3921, 0.5843, 0.9294);
-                    // Vector Ienv(0, 1, 0);
-                    if (delta >= 0) {
-                        // Scalar that stretch the 'V' vector from camera to intercepted point
-                        float t_int = min((-beta + sqrt(delta))/(2*alpha), (-beta - sqrt(delta))/(2*alpha));
-						if (t_int < t){
-							V.times(t_int); // V now is a Vector from the camera to the point in the object
-
-							// Find the intercepted point
-							Point P(O);
-							P.plus(V);//Point whose the vector V intercept
-
-							Vector N(objects[k].center, P);
-							Vector n = N.normalize(); // Normal vector to point in sphere surface
-
-							Vector L(P, light.center);
-							Vector l = L.normalize(); // Nomalized vector from point to light
-
-							Vector Kenv(objects[k].material.env_material); // Components factors to enviroment light
-							Vector Kdif(objects[k].material.dif_material); // Components factors to difuse light
-							Vector Kspe(objects[k].material.spe_material);  // Components factors to specular light
-
-							Vector If(light.color); // Light rate
-
-							// Calculating the difusing rate
-							Vector Idif(If);
-							Idif.at(Kdif);
-							float Fdif = l.dot(n);
-							Idif.times(Fdif);
-
-							// Calculating the specular rate
-							Vector Ispe(If);
-							Ispe.at(Kspe);
-							Vector r(n);
-							r.times(2 * l.dot(n));
-							r.less(l);
-							Vector PO(P, O);
-							Vector v = PO.normalize();
-							float Fspe = pow(r.dot(v),3);
-							Ispe.times(Fspe);
-
-							// Generating the final color for current pixel
-							Vector Color(Ienv);
-							Color.at(Kenv);
-							Color.plus(Idif);
-							Color.plus(Ispe);
-
-							glColor3f(Color.x, Color.y, Color.z);
-							break;
+					// Calculating the delta from 'alpha', 'beta' and 'gamma';
+					float delta = beta * beta - 4 * alpha * gamma;
+					
+					if (delta >= 0) {
+						t = min((-beta + sqrt(delta)) / (2 * alpha), (-beta - sqrt(delta)) / (2 * alpha));
+						if (t < t_int) {
+							t_int = t;
+							indexSphere = k;
+							deltaRay = delta;
 						}
-                    }
-					else {
-						glColor3f(Ienv.x, Ienv.y, Ienv.z);
 					}
-                }
+				}
+                    
+                // Vector Ienv(0, 1, 0);
+                if (deltaRay >= 0) {
+                    // Scalar that stretch the 'V' vector from camera to intercepted point
+                        
+						
+					V.times(t_int); // V now is a Vector from the camera to the point in the object
 
+					// Find the intercepted point
+					Point P(O);
+					P.plus(V);//Point whose the vector V intercept
+
+					Vector N(objects[indexSphere].center, P);
+					Vector n = N.normalize(); // Normal vector to point in sphere surface
+
+					Vector L(P, light.center);
+					Vector l = L.normalize(); // Nomalized vector from point to light
+
+					Vector Kenv(objects[indexSphere].material.env_material); // Components factors to enviroment light
+					Vector Kdif(objects[indexSphere].material.dif_material); // Components factors to difuse light
+					Vector Kspe(objects[indexSphere].material.spe_material);  // Components factors to specular light
+
+					Vector If(light.color); // Light rate
+
+					// Calculating the difusing rate
+					Vector Idif(If);
+					Idif.at(Kdif);
+					float Fdif = l.dot(n);
+					Idif.times(Fdif);
+
+					// Calculating the specular rate
+					Vector Ispe(If);
+					Ispe.at(Kspe);
+					Vector r(n);
+					r.times(2 * l.dot(n));
+					r.less(l);
+					Vector PO(P, O);
+					Vector v = PO.normalize();
+					float Fspe = pow(r.dot(v),3);
+					Ispe.times(Fspe);
+
+					// Generating the final color for current pixel
+					Vector Color(Ienv);
+					Color.at(Kenv);
+					Color.plus(Idif);
+					Color.plus(Ispe);
+
+					glColor3f(Color.x, Color.y, Color.z);
+                }
+				else {
+					glColor3f(Ienv.x, Ienv.y, Ienv.z);
+				}
+      
                 glVertex3f(x,y,-1);
             }
         }
