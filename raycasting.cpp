@@ -46,14 +46,14 @@ Vector snow_dif_material(0.1, 0.1, 0.1);       // Material's difuse component fa
 Vector snow_spe_material(1, 1, 1); // Material's specular component factors
 Material snow_material(snow_env_material, snow_dif_material, snow_spe_material);
 
-Vector snow_env_material2(1, 1, 1);       // Material's enviroment component factors
-Vector snow_dif_material2(0.1, 0.1, 0.1);       // Material's difuse component factors
-Vector snow_spe_material2(1, 1, 1); // Material's specular component factors
+Vector snow_env_material2(1, 1, 1);       
+Vector snow_dif_material2(0.1, 0.1, 0.1);       
+Vector snow_spe_material2(1, 1, 1); 
 Material snow_material2(snow_env_material2, snow_dif_material2, snow_spe_material2);
 
-Vector snow_env_materialEye(0, 0, 0);       // Material's enviroment component factors
-Vector snow_dif_materialEye(0.6, 0.6, 0.6);       // Material's difuse component factors
-Vector snow_spe_materialEye(1, 1, 1); // Material's specular component factors
+Vector snow_env_materialEye(0, 0, 0);       
+Vector snow_dif_materialEye(0.6, 0.6, 0.6);      
+Vector snow_spe_materialEye(1, 1, 1); 
 Material snow_materialEye(snow_env_materialEye, snow_dif_materialEye, snow_spe_materialEye);
 
 
