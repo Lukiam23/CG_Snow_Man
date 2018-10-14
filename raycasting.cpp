@@ -71,7 +71,6 @@ Material snow_materialBottom3(snow_env_materialBottom3, snow_dif_materialBottom3
 
 
 // Snowman definition
-//Point eye_center();
 Point eye_center1(5, 22, -12); // Center of eye sphere
 Sphere eye1(eye_center1, 2, snow_materialEye);
 

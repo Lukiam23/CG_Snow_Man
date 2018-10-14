@@ -182,6 +182,7 @@ public:
 
 Light::Light(Point lcenter, Vector lcolor) : center(lcenter), color(lcolor) {}
 
+//Essa classe ainda faz nada por enquanto
 class Camera {
 public:
     Point lookat;
