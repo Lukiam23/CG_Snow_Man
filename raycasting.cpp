@@ -1,7 +1,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
-#include "scenario2.h"
+#include "scenario.h"
 
 #ifdef __APPLE__
 #include <GL/glew.h>
@@ -13,6 +13,8 @@
 #include <GL/glext.h>
 #pragma comment(lib, "glew32.lib")
 #endif
+
+#include <IL/il.h>
 
 #define PI 3.14159265
 
@@ -34,9 +36,9 @@ float x, y;
 float Dx;
 float Dy;
 
-Point O(0,10,1000); // Origin's point of camera
+Point O(0, 10, 1000); // Origin's point of camera
 
-Point light_center(0, -10000,0);
+Point light_center(0, -10000, 0);
 Vector light_color(1, 1, 1);
 Light light(light_center, light_color);
 
@@ -71,6 +73,7 @@ Material snow_materialBottom3(snow_env_materialBottom3, snow_dif_materialBottom3
 
 
 // Snowman definition
+//Point eye_center();
 Point eye_center1(5, 22, -12); // Center of eye sphere
 Sphere eye1(eye_center1, 2, snow_materialEye);
 
@@ -111,9 +114,9 @@ Vector Vup(viewUp.x - O.x, viewUp.y - O.y, viewUp.z - O.z); //(0,30,0)
 Vector I = Vup.vectorialProduct(kc); //(0,0,0)
 Vector ic = I.normalize();
 Vector jc = kc.vectorialProduct(ic);
-float Mw_c[4][4] = { {ic.x,ic.y,ic.z, -(ic.dot(O))}, {jc.x, jc.y, jc.z, -(jc.dot(O))}, {kc.x , kc.y, kc.z, -(kc.dot(O))}, {0,0,0,1} };
+float Mw_c[4][4] = { { ic.x,ic.y,ic.z, -(ic.dot(O)) },{ jc.x, jc.y, jc.z, -(jc.dot(O)) },{ kc.x , kc.y, kc.z, -(kc.dot(O)) },{ 0,0,0,1 } };
 
-//Essa fun√ß√£o passa os objetos de coordenado do mundo para coordenadas de c√¢mera
+//Essa funÁ„o passa os objetos de coordenado do mundo para coordenadas de c‚mera
 void setObjetos() {
 	for (int i = 0; i < n; i++) {
 		objects[i].center.changeCamera(Mw_c);
@@ -122,15 +125,35 @@ void setObjetos() {
 
 // Drawing routine.
 void drawScene(void) {
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	Dx = W / windowW;
 	Dy = H / windowH;
+
+	glPushAttrib(GL_CURRENT_BIT);
+	glColor3f(1.0, 1.0, 1.0);
+
+	glMatrixMode(GL_MODELVIEW);     // Operate on model-view matrixTESTE
 
 	glEnable(GL_PROGRAM_POINT_SIZE_EXT);
 	glPointSize(1);
 	glLoadIdentity();
 
+
 	glTranslated(0, 0, -2.5);
+
+	glPushMatrix();
+	glRotatef(180, 0, 0, 1);
+	glBegin(GL_QUADS);
+	glTexCoord3f(0, 0, 0); glVertex3f((-1 * (H / 2 - Dy / 2)), -W / 2 + Dx / 2, -2);
+	glTexCoord3f(0, 1, 0); glVertex3f(-1 * (H / 2 - Dy / 2), W / 2 + Dx / 2, -2);
+	glTexCoord3f(1, 1, 0); glVertex3f(H / 2 - Dy / 2, W / 2 + Dx / 2, -2);
+	glTexCoord3f(1, 0, 0); glVertex3f(H / 2 - Dy / 2, -W / 2 + Dx / 2, -2);
+	glEnd();
+	glPopMatrix();
+	glPopAttrib();
+
+	//glMatrixMode(GL_MODELVIEW);
+	glPushAttrib(GL_CURRENT_BIT);
 	glBegin(GL_POINTS);
 	for (float i = 0; i < windowH; i++) {
 		y = H / 2 - Dy / 2 - i * Dy;
@@ -143,7 +166,7 @@ void drawScene(void) {
 			float t = numeric_limits<float>::max();
 
 			Vector V(O.x - Pix.x, O.y - Pix.y, O.z - Pix.z); // Vector from camera to Pixel
-			// Setting the enviroment light;
+															 // Setting the enviroment light;
 			Vector Ienv(0.3921, 0.5843, 0.9294);
 			float deltaRay = -1;
 			int indexSphere = -1;
@@ -178,7 +201,7 @@ void drawScene(void) {
 
 				V.times(t_int); // V now is a Vector from the camera to the point in the object
 
-				// Find the intercepted point
+								// Find the intercepted point
 				Point P(O);
 				P.plus(V);//Point whose the vector V intercept
 
@@ -194,7 +217,7 @@ void drawScene(void) {
 
 				Vector If(light.color); // Light rate
 
-				// Calculating the difusing rate
+										// Calculating the difusing rate
 				Vector Idif(If);
 				Idif.at(Kdif);
 				float Fdif = l.dot(n);
@@ -218,12 +241,14 @@ void drawScene(void) {
 				Color.plus(Ispe);
 
 				glColor3f(Color.x, Color.y, Color.z);
+				glVertex3f(x, y, -1);
 			}
 			else {
 				glColor3f(Ienv.x, Ienv.y, Ienv.z);
+				glVertex3f(x, y, -55);
 			}
 
-			glVertex2f(x, y);
+			
 		}
 	}
 	glEnd();
@@ -256,6 +281,59 @@ void resize(int w, int h)
 	glMatrixMode(GL_MODELVIEW);
 }
 
+/* Initialize OpenGL Graphics */
+void initGL(int w, int h)
+{
+	int wsize = w, hsize = h;
+	if (h >= w)
+	{
+		hsize = w * H / W;
+		glViewport(0, (h - hsize) / 2, wsize, hsize);
+	}
+	else if (h < w)
+	{
+		wsize = h * W / H;
+		glViewport((w - wsize) / 2, 0, wsize, hsize);
+	}
+	glEnable(GL_TEXTURE_2D);     // Enable 2D texturing
+
+	glMatrixMode(GL_PROJECTION);     // Make a simple 2D projection on the entire window
+	glLoadIdentity();
+	//glOrtho(-w, w, h, -h, 0.0, 100.0);
+
+	glMatrixMode(GL_MODELVIEW);    // Set the matrix mode to object modeling
+
+	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+	glClearDepth(0.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the window
+}
+
+/* Load an image using DevIL and return the devIL handle (-1 if failure) */
+int LoadImage(char *filename)
+{
+	ILboolean success;
+	ILuint image;
+
+	ilGenImages(1, &image); /* Generation of one image name */
+	ilBindImage(image); /* Binding of image name */
+	success = ilLoadImage(filename); /* Loading of the image filename by DevIL */
+
+	if (success) /* If no error occured: */
+	{
+		/* Convert every colour component into unsigned byte. If your image contains alpha channel you can replace IL_RGB with IL_RGBA */
+		success = ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE);
+
+		if (!success)
+		{
+			return -1;
+		}
+	}
+	else
+		return -1;
+
+	return image;
+}
+
 // Keyboard input processing routine.
 void keyInput(unsigned char key, int x, int y) {
 	switch (key) {
@@ -269,6 +347,10 @@ void keyInput(unsigned char key, int x, int y) {
 
 // Main routine.
 int main(int argc, char **argv) {
+	GLuint texid;
+	ILuint    image;
+	char* filename = "C:\\Users\\Marcos\\Desktop\\ExemploComImagens\\praia.jpg";
+
 	glutInit(&argc, argv);
 	//setObjetos();
 	setObjetos();
@@ -285,5 +367,40 @@ int main(int argc, char **argv) {
 
 	setup();
 
+	/* OpenGL 2D generic init */
+	initGL(W, H);
+
+
+	/* Initialization of DevIL */
+	if (ilGetInteger(IL_VERSION_NUM) < IL_VERSION)
+	{
+		printf("wrong DevIL version \n");
+		return -1;
+	}
+	ilInit();
+
+
+	/* load the file picture with DevIL */
+	image = LoadImage(filename);
+	if (image == -1)
+	{
+		printf("Can't load picture file %s by DevIL \n", argv[1]);
+		return -1;
+	}
+
+	/* OpenGL texture binding of the image loaded by DevIL  */
+	glGenTextures(1, &texid); /* Texture name generation */
+	glBindTexture(GL_TEXTURE_2D, texid); /* Binding of texture name */
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); /* We will use linear interpolation for magnification filter */
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); /* We will use linear interpolation for minifying filter */
+	glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
+		0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData()); /* Texture specification */
+
 	glutMainLoop();
+
+	/* Delete used resources and quit */
+	ilDeleteImages(1, &image); /* Because we have already copied image data into texture data we can release memory used by image. */
+	glDeleteTextures(1, &texid);
+
+	return 0;
 }
