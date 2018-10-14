@@ -113,14 +113,7 @@ Vector ic = I.normalize();
 Vector jc = kc.vectorialProduct(ic);
 float Mw_c[4][4] = { {ic.x,ic.y,ic.z, -(ic.dot(O))}, {jc.x, jc.y, jc.z, -(jc.dot(O))}, {kc.x , kc.y, kc.z, -(kc.dot(O))}, {0,0,0,1} };
 
-
-
-
-
-
-
-
-
+//Essa função passa os objetos de coordenado do mundo para coordenadas de câmera
 void setObjetos() {
 	for (int i = 0; i < n; i++) {
 		objects[i].center.changeCamera(Mw_c);
