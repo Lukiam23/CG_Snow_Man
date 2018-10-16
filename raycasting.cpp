@@ -11,7 +11,9 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 #include <GL/glext.h>
+#ifdef __WIN32
 #pragma comment(lib, "glew32.lib")
+#endif
 #endif
 
 #include <IL/il.h>
@@ -309,7 +311,7 @@ void initGL(int w, int h)
 }
 
 /* Load an image using DevIL and return the devIL handle (-1 if failure) */
-int LoadImage(char *filename)
+int LoadImage(const char *filename)
 {
 	ILboolean success;
 	ILuint image;
@@ -349,7 +351,12 @@ void keyInput(unsigned char key, int x, int y) {
 int main(int argc, char **argv) {
 	GLuint texid;
 	ILuint    image;
-	char* filename = "C:\\Users\\Marcos\\Desktop\\ExemploComImagens\\praia.jpg";
+
+#ifdef _WIN32
+	const char* filename = "C:\\Users\\Marcos\\Desktop\\ExemploComImagens\\praia.jpg";
+#else
+	const char* filename = "praia.jpg";
+#endif
 
 	glutInit(&argc, argv);
 	//setObjetos();
