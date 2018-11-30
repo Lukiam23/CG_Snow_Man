@@ -6,6 +6,10 @@ Scenario::Scenario() {
 	qtCam = 0;
 };
 
+Objeto** Scenario::getAllObjects() {
+	return objetos;
+}
+
 int Scenario::getQtObj() {
 	return this->qtObjetos;
 }

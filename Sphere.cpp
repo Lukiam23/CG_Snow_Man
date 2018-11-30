@@ -1,5 +1,8 @@
 #include "Sphere.h"
 #include <iostream>
+#include <limits>
+
+using namespace std;
 
 Sphere::Sphere() {};
 
@@ -11,7 +14,7 @@ Sphere::Sphere(Point pcenter, float sradius, const Material& smaterial)
 struct Data Sphere::intersect(Point O, Vetor V, int k, float t_int) {
 	float alpha = V.dot(V);
 	
-	Vetor CO(- center.getX(), - center.getY(), - center.getZ());
+	Vetor CO(O.getX() - center.getX(), O.getY() - center.getY(),O.getZ() - center.getZ());
 	float beta = 2 * V.dot(CO);
 
 	float gamma = CO.dot(CO) - pow(radius, 2);
@@ -39,7 +42,25 @@ struct Data Sphere::intersect(Point O, Vetor V, int k, float t_int) {
 	return data;
 }
 
-Vetor Sphere::calcColor(Point O, Vetor V, Vetor Ienv, float t_int,Light* light) {
+bool Sphere::simpleIntersect(Point O, Vetor V) {
+	
+	float alpha = V.dot(V);
+	Vetor CO(O.getX() - center.getX(), O.getY() - center.getY(), O.getZ() - center.getZ());
+	
+	float beta = 2 * V.dot(CO);
+
+	float gamma = CO.dot(CO) - pow(radius, 2);
+
+	// Calculating the delta from 'alpha', 'beta' and 'gamma';
+	float delta = (beta * beta) - (4 * alpha * gamma);
+
+	if (delta >= 0) {
+		return true;
+	}
+	return false;
+}
+
+Vetor Sphere::calcColor(Point O, Vetor V, Vetor Ienv, float t_int,Light* light,bool kill) {
 	V *= t_int;
 	Point P(O);
 	P += V;
@@ -53,32 +74,44 @@ Vetor Sphere::calcColor(Point O, Vetor V, Vetor Ienv, float t_int,Light* light) 
 	Vetor L((*light).center.getX() - P.getX(), (*light).center.getY() - P.getY(), (*light).center.getZ() - P.getZ());
 	Vetor l = L.normalize();
 
+
 	Vetor Kenv(material.env_material);
 	Vetor Kdif(material.dif_material);
 	Vetor Kspe(material.spe_material);
-
-
-
-	Vetor If((*light).color);
 	
+	Vetor If((*light).color);
 	Vetor Idif(If);
+	
 	Idif.at(Kdif);
 
 	float Fdif = l.dot(n);
 	Idif *= Fdif;
 
+
+	
+	
+	
+	
+
 	// Calculating the specular rate
-	Vetor Ispe(If);
-	Ispe.at(Kspe);
-	Vetor r(n);
+	Vetor Ispe;
+	if (!kill) {
+		Ispe = Vetor(If);
+		Ispe.at(Kspe);
+		Vetor r(n);
 
-	r *= (2 * l.dot(n));
+		r *= (2 * l.dot(n));
 
-	r -= (l);
-	Vetor PO(- P.getX(), - P.getY(), - P.getZ());
-	Vetor v = PO.normalize();
-	float Fspe = pow(r.dot(v), 1);
-	Ispe *= (Fspe);
+		r -= (l);
+		Vetor PO(-P.getX(), -P.getY(), -P.getZ());
+		Vetor v = PO.normalize();
+		float Fspe = pow(r.dot(v), 1);
+		Ispe *= (Fspe);
+	}
+	else {
+		Ispe = Vetor(0, 0, 0);
+	}
+	
 
 	// Generating the final color for current pixel
 	Vetor Color(Ienv);
@@ -97,7 +130,9 @@ void Sphere::print() {
 	std::cout << "Raio: " << this->radius << std::endl;
 }
 
-int Sphere::shadowIntersection(Objeto* obj,Light* light) {
-	return 0;
+
+Point Sphere::getCenter() {
+	return this->center;
 }
+
 

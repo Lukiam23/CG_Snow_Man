@@ -16,10 +16,11 @@ public:
 	Sphere();
 	Sphere(Point, float, const Material&);
 	struct Data intersect(Point, Vetor , int , float);
-	int shadowIntersection(Objeto* obj,Light* light);
-	Vetor calcColor(Point O, Vetor V, Vetor Ienv, float t_int,Light* light);
+	Vetor calcColor(Point O, Vetor V, Vetor Ienv, float t_int,Light* light,bool kill);
 	void changeToCam(Camera cam);
+	bool simpleIntersect(Point, Vetor);
 	void print();
+	Point getCenter();
 };
 
 #endif

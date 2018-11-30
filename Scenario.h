@@ -34,5 +34,6 @@ public:
 	void changePoint(int index, Point* p);
 	int getQtLig();
 	Point* getOrigin();
+	Objeto** getAllObjects();
 };
 #endif // Scenario_H

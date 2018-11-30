@@ -24,21 +24,21 @@ double H = 500;
 double W = 500;
 
 Scenario scenario;
-Point O(0, 500, 0);
-Vetor Ienv(1,1,1);
+Point O(0,250,500);
+Vetor Ienv(0.5,0.5,0.5);
 
 void setScenario() {
 	
 	scenario = Scenario(O, Ienv);
 
 	/*---------------------------Light Snowman-----------------------*/
-	Point light_center(0,300 ,0);
-	Vetor light_color(0.7, 0.7, 0.7);
+	Point light_center(150,150 ,0);
+	Vetor light_color(0.8, 0.8, 0.8);
 	Light* light = new Light(light_center, light_color);
 	scenario.addLuz(light);
 
 	/*---------------------------Material Snowman-----------------------*/
-	Vetor floor_env_material(0, 0, 0);       // Material's enviroment component factors
+	Vetor floor_env_material(0, 1, 0.5);       // Material's enviroment component factors
 	Vetor floor_dif_material(0.5, 0.5, 0.5);       // Material's difuse component factors
 	Vetor floor_spe_material(0.5, 0.5, 0.5); // Material's specular component factors
 	Material floor_material(floor_env_material, floor_dif_material, floor_spe_material);
@@ -108,7 +108,7 @@ void setScenario() {
 	scenario.addObjeto(floor1);
 
 	Point lookat(0,0,0);
-	Point viewUP(100,0,0);
+	Point viewUP(0,100,0);
 	Camera* cam = new Camera(O,lookat,viewUP);
 
 	scenario.addCam(cam);
@@ -130,12 +130,10 @@ void drawScene(void) {
 	glBegin(GL_POINTS);
 
 	double d = 1500;
-
 	for (l = 0; l < H_Npixels; l++) {
 		y = (H / 2 - Dy / 2 - l * Dy);
 		for (c = 0; c < W_Npixels; c++) {
 			x = (-W / 2 + Dx / 2 + c * Dx);
-
 			float t_int = numeric_limits<float>::max();
 
 			Vetor V(x, y, -d); // Vector from camera to Pixel
@@ -145,6 +143,7 @@ void drawScene(void) {
 			Point O(0, 0, 0);
 			for (int k = 0; k < scenario.getQtObj(); k++) {
 				Data data = scenario.getObjeto(k)->intersect(O,V,k,t_int);
+				
 				if (!data.empty) {
 					t_int = data.t_int;
 					indexSphere = data.indexSphere;
@@ -153,17 +152,28 @@ void drawScene(void) {
 			}
 			
 			if (deltaRay >= 0) {
-				for (int k = 0; k < scenario.getQtObj(); k++) {
-					scenario.getObjeto(indexSphere)->shadowIntersection(scenario.getObjeto(k),scenario.getLight(0));
-				}
 
-				Vetor color = scenario.getObjeto(indexSphere)->calcColor(O, V, Ienv, t_int, scenario.getLight(0));
+				Vetor VT(V * t_int);
+				Point P_int(VT.getX(), VT.getY(), VT.getZ());
+				Point l = scenario.getLight(0)->center;
+				
+				Vetor PL(l.getX() - P_int.getX(), l.getY() - P_int.getY(), l.getZ() - P_int.getZ());
+			
+				int indexO = 0;
+				bool result = false;
+				while (indexO < scenario.getQtObj() && result == false) {
+					if (indexO != indexSphere) {
+						result = scenario.getObjeto(indexO)->simpleIntersect(P_int, PL);
+					}
+					indexO++;
+				}
+				
+				Vetor color = scenario.getObjeto(indexSphere)->calcColor(O, V, Ienv, t_int, scenario.getLight(0),result);
 				glColor3f(color.getX(), color.getY(), color.getZ());
 			}
 			else {
 				glColor3f(0.3921, 0.5843, 0.9294);
 			}
-			
 			glVertex2f(c, l);
 		}
 	}
