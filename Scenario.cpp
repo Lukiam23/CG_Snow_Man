@@ -1,4 +1,5 @@
 #include "Scenario.h"
+#include <iostream>
 
 Scenario::Scenario() {
 	qtObjetos = 0;
@@ -45,7 +46,8 @@ Scenario::Scenario(Point O, Vetor Ienv) {
 }
 
 void Scenario::addObjeto(Objeto *objeto) {
-	objetos[this->qtObjetos] = objeto;
+	Objeto* newObj = objeto;
+ 	objetos[this->qtObjetos] = newObj;
 	qtObjetos++;
 }
 
@@ -61,7 +63,7 @@ void Scenario::addCam(Camera* cam) {
 
 void Scenario::changeObj(int index) {
 	if (index < qtCam) {
-		for (int i = 0; i < this->qtObjetos; i++) {
+		for (int i = 0; i < this->qtObjetos; i++) {			
 			objetos[i]->changeToCam(*cams[index]);
 		}
 	}

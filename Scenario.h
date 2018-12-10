@@ -10,7 +10,7 @@
 
 class Scenario {
 private:
-	Objeto* objetos[10];
+	Objeto* objetos[2000];
 	Light* lights[10];
 	Camera* cams[10];
 
